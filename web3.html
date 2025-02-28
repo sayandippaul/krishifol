@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline Blockchain with Pinata</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h1>Save Name to Offline Blockchain & Share via Address</h1>
+
+    <button onclick="connectMetaMask()">Connect MetaMask</button>
+    <p id="account"></p>
+
+    <h2>Save Name</h2>
+    <input type="text" id="name" placeholder="Enter your name">
+    <input type="text" id="recipient" placeholder="Recipient Address">
+    <button onclick="saveName()">Save & Send</button>
+
+    <h2>Retrieve Name</h2>
+    <input type="text" id="address" placeholder="Enter your address">
+    <button onclick="retrieveName()">Get Name</button>
+
+    <h3>Result:</h3>
+    <pre id="result"></pre>
+
+    <script>
+        let userAccount;
+
+        async function connectMetaMask() {
+            if (window.ethereum) {
+                try {
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    userAccount = accounts[0];
+                    document.getElementById('account').innerText = 'Connected Account: ' + userAccount;
+                } catch (error) {
+                    console.error('MetaMask connection failed:', error);
+                }
+            } else {
+                alert('Please install MetaMask!');
+            }
+        }
+
+        async function saveName() {
+            const name = document.getElementById('name').value;
+            const recipient = document.getElementById('recipient').value;
+            if (!name || !recipient) return alert('Please enter name and recipient address!');
+
+            try {
+                const response = await axios.post('http://localhost:3000/save-name', { name, recipient });
+                alert('Name saved and sent to address!');
+                document.getElementById('result').innerText = JSON.stringify(response.data, null, 2);
+            } catch (error) {
+                console.error('Error saving name:', error);
+            }
+        }
+
+        async function retrieveName() {
+            const address = document.getElementById('address').value || userAccount;
+            if (!address) return alert('Please enter an address or connect MetaMask!');
+
+            try {
+                const response = await axios.get(`http://localhost:3000/get-name/${address}`);
+                document.getElementById('result').innerText = response.data.name || 'No name found for this address.';
+            } catch (error) {
+                console.error('Error retrieving name:', error);
+            }
+        }
+    </script>
+</body>
+</html>
